@@ -32,17 +32,6 @@ impl Ray {
         self.origin + t * self.direction
     }
 
-    pub fn colour(&self, world: &HittableList) -> Colour {
-        let mut rec = HitRecord::default();
-        if world.hit(self, 0.0, INFINITY, &mut rec) {
-            return 0.5 * (rec.normal + Colour::new(1.0, 1.0, 1.0));
-        }
-
-        let unit_direction = Vec3::unit_vector(self.direction());
-        let a = 0.5 * (unit_direction.y() + 1.0);
-        (1.0 - a) * Colour::new(1.0, 1.0, 1.0) + a * Colour::new(0.5, 0.7, 1.0)
-    }
-
     pub fn hit_sphere(&self, center: Point3, radius: f64) -> f64 {
         let oc = center - self.origin;
         let a = self.direction.length_squared();
@@ -55,5 +44,17 @@ impl Ray {
         }
 
         (h - discriminant.sqrt()) / a
+    }
+
+    pub fn colour(&self, world: &HittableList) -> Colour {
+        let mut rec = HitRecord::default();
+        if world.hit(self, 0.0, INFINITY, &mut rec) {
+            let direction = Vec3::random_on_hemisphere(rec.normal);
+            return 0.5 * Ray::new(rec.p, direction).colour(world);
+        }
+
+        let unit_direction = self.direction().unit_vector();
+        let a = 0.5 * (unit_direction.y() + 1.0);
+        (1.0 - a) * Colour::new(1.0, 1.0, 1.0) + a * Colour::new(0.5, 0.7, 1.0)
     }
 }

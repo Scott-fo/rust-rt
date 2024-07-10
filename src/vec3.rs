@@ -1,6 +1,8 @@
 use std::fmt;
 use std::ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub};
 
+use crate::utils::{random_double, random_double_in_range};
+
 #[derive(Copy, Clone, Debug)]
 pub struct Vec3 {
     e: [f64; 3],
@@ -31,6 +33,18 @@ impl Vec3 {
         self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2]
     }
 
+    pub fn random() -> Vec3 {
+        Vec3::new(random_double(), random_double(), random_double())
+    }
+
+    pub fn random_in_range(min: f64, max: f64) -> Vec3 {
+        Vec3::new(
+            random_double_in_range(min, max),
+            random_double_in_range(min, max),
+            random_double_in_range(min, max),
+        )
+    }
+
     pub fn dot(u: Vec3, v: Vec3) -> f64 {
         u.e[0] * v.e[0] + u.e[1] * v.e[1] + u.e[2] * v.e[2]
     }
@@ -43,9 +57,31 @@ impl Vec3 {
         )
     }
 
-    pub fn unit_vector(v: Vec3) -> Vec3 {
-        v / v.length()
+    pub fn unit_vector(self) -> Vec3 {
+        self / self.length()
     }
+
+    pub fn random_in_unit_sphere() -> Vec3 {
+        loop {
+            let p = Vec3::random_in_range(-1.0, 1.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
+
+    pub fn random_on_hemisphere(self) -> Vec3 {
+        let on_unit_sphere = random_unit_vector();
+        if Vec3::dot(on_unit_sphere, self) > 0.0 {
+            return on_unit_sphere;
+        }
+
+        -on_unit_sphere
+    }
+}
+
+pub fn random_unit_vector() -> Vec3 {
+    Vec3::random_in_unit_sphere().unit_vector()
 }
 
 impl Default for Vec3 {
@@ -294,7 +330,7 @@ mod tests {
     #[test]
     fn test_unit_vector() {
         let v = Vec3::new(3.0, 4.0, 0.0);
-        let unit_v = Vec3::unit_vector(v);
+        let unit_v = v.unit_vector();
         assert!((unit_v.x() - 0.6).abs() < 1e-10);
         assert!((unit_v.y() - 0.8).abs() < 1e-10);
         assert!((unit_v.z() - 0.0).abs() < 1e-10);
