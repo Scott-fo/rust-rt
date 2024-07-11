@@ -5,12 +5,13 @@ use crate::{
     hittable::{HitRecord, Hittable},
     hittable_list::HittableList,
     interval::Interval,
-    vec3::{random_unit_vector, Vec3},
+    material::Material,
+    vec3::Vec3,
 };
 
 pub type Point3 = Vec3;
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Default, Copy, Clone, Debug)]
 pub struct Ray {
     origin: Point3,
     direction: Vec3,
@@ -54,8 +55,16 @@ impl Ray {
 
         let mut rec = HitRecord::default();
         if world.hit(self, Interval::new(0.001, INFINITY), &mut rec) {
-            let direction = rec.normal + random_unit_vector();
-            return 0.1 * Ray::new(rec.p, direction).colour(world, depth - 1);
+            let mut scattered = Ray::default();
+            let mut attenuation = Colour::default();
+            if rec
+                .material
+                .scatter(self, &rec, &mut attenuation, &mut scattered)
+            {
+                return attenuation * scattered.colour(world, depth - 1);
+            }
+
+            return Colour::default();
         }
 
         let unit_direction = self.direction().unit_vector();
