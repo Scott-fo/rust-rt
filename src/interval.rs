@@ -10,6 +10,14 @@ impl Interval {
         Self { range: min..max }
     }
 
+    pub fn min(&self) -> f64 {
+        self.range.start
+    }
+
+    pub fn max(&self) -> f64 {
+        self.range.end
+    }
+
     pub fn surrounds(&self, x: f64) -> bool {
         self.range.start < x && x < self.range.end
     }

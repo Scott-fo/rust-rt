@@ -1,16 +1,19 @@
 use crate::{
+    interval::Interval,
+    material::MaterialEnum,
     ray::{Point3, Ray},
     vec3::Vec3,
 };
 
 pub trait Hittable {
-    fn hit(&self, r: &Ray, ray_tmin: f64, ray_tmax: f64, rec: &mut HitRecord) -> bool;
+    fn hit(&self, r: &Ray, interval: Interval, rec: &mut HitRecord) -> bool;
 }
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Copy, Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
+    pub material: MaterialEnum,
     pub t: f64,
     pub front_face: bool,
 }

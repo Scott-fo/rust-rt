@@ -78,6 +78,11 @@ impl Vec3 {
 
         -on_unit_sphere
     }
+
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        self.e[0].abs() < s && self.e[1].abs() < s && self.e[2].abs() < s
+    }
 }
 
 pub fn random_unit_vector() -> Vec3 {

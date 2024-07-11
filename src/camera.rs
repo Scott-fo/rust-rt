@@ -10,6 +10,7 @@ pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: i64,
     pub samples_per_pixel: i64,
+    pub max_depth: i64,
     pixel_samples_scale: f64,
     image_height: i64,
     center: Point3,
@@ -19,7 +20,12 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new(aspect_ratio: f64, image_width: i64, samples_per_pixel: i64) -> Self {
+    pub fn new(
+        aspect_ratio: f64,
+        image_width: i64,
+        samples_per_pixel: i64,
+        max_depth: i64,
+    ) -> Self {
         let mut image_height = (image_width as f64 / aspect_ratio) as i64;
 
         if image_height < 1 {
@@ -49,6 +55,7 @@ impl Camera {
             aspect_ratio,
             image_width,
             samples_per_pixel,
+            max_depth,
             pixel_samples_scale,
             image_height,
             center,
@@ -67,7 +74,7 @@ impl Camera {
                 let mut pixel_colour = Colour::new(0.0, 0.0, 0.0);
                 for _ in 0..self.samples_per_pixel {
                     let r = Camera::get_ray(&self, i, j);
-                    pixel_colour += r.colour(world);
+                    pixel_colour += r.colour(world, self.max_depth);
                 }
                 pixel_colour *= self.pixel_samples_scale;
                 pixel_colour.display();
