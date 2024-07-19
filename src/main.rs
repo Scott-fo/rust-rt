@@ -15,7 +15,7 @@ fn main() {
     let ground = Lambertian::new(Colour::new(0.8, 0.8, 0.0));
     let center = Lambertian::new(Colour::new(0.1, 0.2, 0.5));
 
-    let left = Dielectric::new(1.50);
+    let left = Dielectric::new(1.00 / 1.33);
     let right = Metal::new(Colour::new(0.8, 0.6, 0.2), 0.2);
 
     world.add(Box::new(Sphere::new(
