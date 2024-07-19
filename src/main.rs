@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use ray_tracing::{
     camera::Camera,
     colour::Colour,
@@ -39,5 +41,5 @@ fn main() {
         MaterialEnum::Metal(right),
     )));
 
-    camera.render(&world);
+    camera.render(Arc::new(world));
 }

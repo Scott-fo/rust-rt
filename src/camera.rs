@@ -1,3 +1,9 @@
+use std::{
+    sync::{Arc, Mutex},
+    thread::{spawn, JoinHandle},
+    vec,
+};
+
 use crate::{
     colour::Colour,
     hittable_list::HittableList,
@@ -6,6 +12,7 @@ use crate::{
     vec3::Vec3,
 };
 
+#[derive(Clone)]
 pub struct Camera {
     pub aspect_ratio: f64,
     pub image_width: i64,
@@ -65,24 +72,59 @@ impl Camera {
         }
     }
 
-    pub fn render(&self, world: &HittableList) {
+    pub fn render(&self, world: Arc<HittableList>) {
+        let num_threads = std::thread::available_parallelism().unwrap().get();
+        let chunk_size = self.image_height as usize / num_threads;
+
+        let results = Arc::new(Mutex::new(vec![String::new(); self.image_height as usize]));
+
+        (0..num_threads)
+            .map(|t| {
+                let start = t * chunk_size;
+                let end = match t == num_threads - 1 {
+                    true => self.image_height as usize,
+                    false => (t + 1) * chunk_size,
+                };
+
+                let results_clone = Arc::clone(&results);
+                let world_clone = Arc::clone(&world);
+                let self_clone = self.clone();
+                spawn(move || {
+                    Camera::render_chunk(self_clone, start, end, world_clone, results_clone);
+                })
+            })
+            .collect::<Vec<JoinHandle<()>>>()
+            .into_iter()
+            .for_each(|handle| handle.join().unwrap());
+
         print!("P3\n{} {}\n255\n", self.image_width, self.image_height);
 
-        for j in 0..self.image_height {
-            eprint!("\rScanlines remaining: {} ", self.image_height - j);
-            for i in 0..self.image_width {
-                let mut pixel_colour = Colour::new(0.0, 0.0, 0.0);
-                for _ in 0..self.samples_per_pixel {
-                    let r = Camera::get_ray(&self, i, j);
-                    pixel_colour += r.colour(world, self.max_depth);
-                }
-                pixel_colour *= self.pixel_samples_scale;
-                pixel_colour.display();
-            }
+        let results = Arc::try_unwrap(results).unwrap().into_inner().unwrap();
+        for line in results {
+            print!("{}", line);
         }
+    }
 
-        eprintln!();
-        eprintln!("\rDone. \n");
+    fn render_chunk(
+        camera: Camera,
+        start: usize,
+        end: usize,
+        world: Arc<HittableList>,
+        results: Arc<Mutex<Vec<String>>>,
+    ) {
+        for j in start..end {
+            let mut line_result = String::new();
+            for i in 0..camera.image_width {
+                let mut pixel_colour = Colour::new(0.0, 0.0, 0.0);
+                for _ in 0..camera.samples_per_pixel {
+                    let r = Camera::get_ray(&camera, i, j as i64);
+                    pixel_colour += r.colour(&world, camera.max_depth);
+                }
+                pixel_colour *= camera.pixel_samples_scale;
+                line_result.push_str(&pixel_colour.write());
+            }
+            results.lock().unwrap()[j] = line_result;
+        }
     }
 
     fn get_ray(&self, i: i64, j: i64) -> Ray {

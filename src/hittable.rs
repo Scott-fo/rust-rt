@@ -5,7 +5,7 @@ use crate::{
     vec3::Vec3,
 };
 
-pub trait Hittable {
+pub trait Hittable: Send + Sync {
     fn hit(&self, r: &Ray, interval: Interval, rec: &mut HitRecord) -> bool;
 }
 
