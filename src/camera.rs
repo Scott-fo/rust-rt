@@ -111,6 +111,8 @@ impl Camera {
         for line in results {
             print!("{}", line);
         }
+
+        eprintln!("");
     }
 
     fn render_chunk(
