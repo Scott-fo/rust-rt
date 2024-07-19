@@ -90,7 +90,15 @@ impl Camera {
                 let world_clone = Arc::clone(&world);
                 let self_clone = self.clone();
                 spawn(move || {
-                    Camera::render_chunk(self_clone, start, end, world_clone, results_clone);
+                    Camera::render_chunk(
+                        t,
+                        self_clone,
+                        start,
+                        end,
+                        world_clone,
+                        results_clone,
+                        t == num_threads - 1,
+                    );
                 })
             })
             .collect::<Vec<JoinHandle<()>>>()
@@ -106,13 +114,23 @@ impl Camera {
     }
 
     fn render_chunk(
+        chunk: usize,
         camera: Camera,
         start: usize,
         end: usize,
         world: Arc<HittableList>,
         results: Arc<Mutex<Vec<String>>>,
+        report: bool,
     ) {
         for j in start..end {
+            if report {
+                eprint!(
+                    "\rChunk {} working on line {} of {}",
+                    { chunk },
+                    { j - start },
+                    { end - start }
+                );
+            }
             let mut line_result = String::new();
             for i in 0..camera.image_width {
                 let mut pixel_colour = Colour::new(0.0, 0.0, 0.0);
