@@ -7,10 +7,20 @@ use ray_tracing::{
     material::{Dielectric, Lambertian, MaterialEnum, Metal},
     ray::Point3,
     sphere::Sphere,
+    vec3::Vec3,
 };
 
 fn main() {
-    let camera = Camera::new(16.0 / 9.0, 400, 100, 50);
+    let camera = Camera::new(
+        16.0 / 9.0,
+        400,
+        100,
+        50,
+        90,
+        Point3::new(-2.0, 2.0, 1.0),
+        Point3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+    );
 
     let mut world = HittableList::new();
 

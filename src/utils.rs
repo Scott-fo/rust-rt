@@ -17,3 +17,7 @@ pub fn random_double_in_range(min: f64, max: f64) -> f64 {
     let uniform = Uniform::from(min..max);
     uniform.sample(&mut rng)
 }
+
+pub fn degrees_to_radians(degrees: f64) -> f64 {
+    degrees * std::f64::consts::PI / 180.0
+}

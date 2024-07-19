@@ -8,7 +8,7 @@ use crate::{
     colour::Colour,
     hittable_list::HittableList,
     ray::{Point3, Ray},
-    utils::sample_square,
+    utils::{degrees_to_radians, sample_square},
     vec3::Vec3,
 };
 
@@ -18,6 +18,10 @@ pub struct Camera {
     pub image_width: i64,
     pub samples_per_pixel: i64,
     pub max_depth: i64,
+    pub vfov: i64,
+    pub look_from: Point3,
+    pub look_at: Point3,
+    pub vup: Vec3,
     pixel_samples_scale: f64,
     image_height: i64,
     center: Point3,
@@ -32,6 +36,10 @@ impl Camera {
         image_width: i64,
         samples_per_pixel: i64,
         max_depth: i64,
+        vfov: i64,
+        look_from: Point3,
+        look_at: Point3,
+        vup: Vec3,
     ) -> Self {
         let mut image_height = (image_width as f64 / aspect_ratio) as i64;
 
@@ -41,20 +49,25 @@ impl Camera {
 
         let pixel_samples_scale = 1.0 / samples_per_pixel as f64;
 
-        let center = Point3::new(0.0, 0.0, 0.0);
+        let center = look_from;
 
-        let focal_length = 1.0;
-        let viewport_height = 2.0;
+        let focal_length = (look_from - look_at).length();
+        let theta = degrees_to_radians(vfov as f64);
+        let h = (theta / 2.0).tan();
+        let viewport_height = 2.0 * h * focal_length;
         let viewport_width = viewport_height * (image_width as f64 / image_height as f64);
 
-        let viewport_u = Vec3::new(viewport_width, 0.0, 0.0);
-        let viewport_v = Vec3::new(0.0, -viewport_height, 0.0);
+        let w = (look_from - look_at).unit_vector();
+        let u = Vec3::cross(vup, w).unit_vector();
+        let v = Vec3::cross(w, u);
+
+        let viewport_u = viewport_width * u;
+        let viewport_v = viewport_height * -v;
 
         let pixel_delta_u = viewport_u / image_width as f64;
         let pixel_delta_v = viewport_v / image_height as f64;
 
-        let viewport_upper_left =
-            center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+        let viewport_upper_left = center - (focal_length * w) - viewport_u / 2.0 - viewport_v / 2.0;
 
         let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
@@ -63,6 +76,10 @@ impl Camera {
             image_width,
             samples_per_pixel,
             max_depth,
+            vfov,
+            look_from,
+            look_at,
+            vup,
             pixel_samples_scale,
             image_height,
             center,
